@@ -5,37 +5,73 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/lehvui/learn_go/entities"
 	en "github.com/lehvui/learn_go/entities"
 )
 
 type Game struct {
 	Player        *en.Player
 	RemotePlayers []*en.RPlayer
+	Sprite        *en.Sprite
+	Projectiles   []*en.Projectile
 }
 
 func (g *Game) Update() error {
-
 	g.Player.ListenEvents()
-
 	for _, r := range g.RemotePlayers {
 		r.ListenEvents()
 	}
+
+	g.Sprite.X = g.Player.X
+	g.Sprite.Y = g.Player.Y
+
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		curso := en.Position{X: float64(x), Y: float64(y)}
+		playerP := en.Position{X: g.Player.X, Y: g.Player.Y}
+
+		proj := entities.NewProjectile("items.png", playerP, playerP, curso)
+		g.Projectiles = append(g.Projectiles, proj)
+	}
+
+	var aliveProjectiles []*en.Projectile
+	for _, proj := range g.Projectiles {
+		proj.Update()
+		if proj.Alive {
+			aliveProjectiles = append(aliveProjectiles, proj)
+		}
+	}
+	g.Projectiles = aliveProjectiles
 
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	if g.Sprite != nil {
+		g.Sprite.Draw(screen)
+	}
 
-	opt := &ebiten.DrawImageOptions{}
-
-	opt.GeoM.Translate(g.Player.X, g.Player.Y)
-	screen.DrawImage(g.Player.Img, opt)
+	if g.Player != nil {
+		pSprite := &entities.Sprite{
+			Image: g.Player.Img,
+			X:     g.Player.X,
+			Y:     g.Player.Y,
+		}
+		pSprite.Draw(screen)
+	}
 
 	for _, r := range g.RemotePlayers {
-		ropt := &ebiten.DrawImageOptions{}
-		ropt.GeoM.Translate(r.X, r.Y)
-		screen.DrawImage(r.Img, ropt)
+		rSprite := &entities.Sprite{
+			Image: r.Img,
+			X:     r.X,
+			Y:     r.Y,
+		}
+		rSprite.Draw(screen)
+	}
+
+	for _, proj := range g.Projectiles {
+		proj.Draw(screen)
 	}
 }
 
@@ -47,33 +83,29 @@ func main() {
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Hello, World!")
 
-	firstCharacter := image.Rect(96, 0, 64, 32)
+	playerRect := image.Rect(96, 0, 96+64, 0+32)
+	remoteRect := image.Rect(0, 0, 32, 32)
 
-	spriteSheet, _, err := ebitenutil.NewImageFromFile("rogues.png")
+	mainSprite := en.NewSpriteFromSheet("rogues.png", playerRect, 100, 50)
+	remoteSprite := en.NewSpriteFromSheet("rogues.png", remoteRect, 200, 100)
 
-	playerImg := spriteSheet.SubImage(firstCharacter)
-
-	remoteImg := spriteSheet.SubImage(image.Rect(0, 0, 32, 32))
-
-	if err != nil {
-		log.Fatal(err)
+	p := &entities.Player{
+		Img: mainSprite.Image,
+		X:   mainSprite.X,
+		Y:   mainSprite.Y,
 	}
 
-	p1 := &en.Player{
-		Img: ebiten.NewImageFromImage(playerImg),
-		X:   100,
-		Y:   100,
+	r := &entities.RPlayer{
+		Img: remoteSprite.Image,
+		X:   remoteSprite.X,
+		Y:   remoteSprite.Y,
 	}
 
 	game := &Game{
-		Player: p1,
-		RemotePlayers: []*en.RPlayer{
-			&en.RPlayer{
-				Img: ebiten.NewImageFromImage(remoteImg),
-				X:   150,
-				Y:   150,
-			},
-		},
+		Player:        p,
+		RemotePlayers: []*en.RPlayer{r},
+		Sprite:        mainSprite,
+		Projectiles:   []*en.Projectile{},
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
