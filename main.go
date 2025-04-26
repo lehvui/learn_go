@@ -29,20 +29,17 @@ func (g *Game) Update() error {
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
 		curso := en.Position{X: float64(x), Y: float64(y)}
+
 		playerP := en.Position{X: g.Player.X, Y: g.Player.Y}
 
 		proj := entities.NewProjectile("items.png", playerP, playerP, curso)
+
 		g.Projectiles = append(g.Projectiles, proj)
 	}
 
-	var aliveProjectiles []*en.Projectile
 	for _, proj := range g.Projectiles {
 		proj.Update()
-		if proj.Alive {
-			aliveProjectiles = append(aliveProjectiles, proj)
-		}
 	}
-	g.Projectiles = aliveProjectiles
 
 	return nil
 }
@@ -70,8 +67,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		rSprite.Draw(screen)
 	}
 
+	// fmt.Printf("%v", g.Projectiles)
+
 	for _, proj := range g.Projectiles {
-		proj.Draw(screen)
+		if proj.Alive() {
+			proj.Draw(screen)
+		}
 	}
 }
 
