@@ -16,7 +16,7 @@ type Projectile struct {
 func NewProjectile(path string, img, start, end Position) *Projectile {
 	s := NewNumberSprite(path, img.X, img.Y, 2, 23)
 
-	long := 50
+	long := 200
 	dir := Sub(end, start)
 	distance := Distance(start, end)
 
@@ -28,22 +28,28 @@ func NewProjectile(path string, img, start, end Position) *Projectile {
 	return &Projectile{
 		Sprite: s,
 		Pos:    start,
-		Dir:    newDir,
+		Dir:    Add(newDir, start),
 	}
 }
 
 func (p *Projectile) Update() {
 
-	if p.Life < 1 {
+	if Equal(p.Pos, p.Dir) {
+		p.Life = 1
+	}
+
+	if p.Alive() {
 		p.Pos = Path(p.Pos, p.Dir, p.Life)
 		p.Sprite.X = p.Pos.X
 		p.Sprite.Y = p.Pos.Y
-		p.Life += 0.005
+		p.Life += 0.01
 	}
+
+	fmt.Println(p.Pos, p.Dir)
+
 }
 
 func (p *Projectile) Draw(screen *ebiten.Image) {
-	fmt.Println(p.Life)
 	p.Sprite.Draw(screen)
 }
 

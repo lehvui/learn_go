@@ -18,6 +18,18 @@ func Sub(pos1, pos2 Position) Position {
 	return Position{pos1.X - pos2.X, pos1.Y - pos2.Y}
 }
 
+func Add(pos1, pos2 Position) Position {
+	return Position{pos1.X + pos2.X, pos1.Y + pos2.Y}
+}
+
+func Equal(pos1, pos2 Position) bool {
+	if int32(pos1.X) == int32(pos2.X) && int32(pos1.Y) == int32(pos2.Y) {
+		return true
+	}
+
+	return false
+}
+
 func Distance(pos1, pos2 Position) float64 {
 	dir := Sub(pos1, pos2)
 

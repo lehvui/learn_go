@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"log"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -28,11 +29,11 @@ func (g *Game) Update() error {
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
-		curso := en.Position{X: float64(x), Y: float64(y)}
+		cursor := en.Position{X: float64(x), Y: float64(y)}
 
 		playerP := en.Position{X: g.Player.X, Y: g.Player.Y}
 
-		proj := entities.NewProjectile("items.png", playerP, playerP, curso)
+		proj := entities.NewProjectile("items.png", playerP, playerP, cursor)
 
 		g.Projectiles = append(g.Projectiles, proj)
 	}
@@ -67,12 +68,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		rSprite.Draw(screen)
 	}
 
-	// fmt.Printf("%v", g.Projectiles)
+	for index, proj := range g.Projectiles {
 
-	for _, proj := range g.Projectiles {
-		if proj.Alive() {
-			proj.Draw(screen)
+		if proj == nil {
+			continue
 		}
+
+		if !proj.Alive() {
+			g.Projectiles = slices.Delete(g.Projectiles, index, index+1)
+			continue
+		}
+
+		proj.Draw(screen)
 	}
 }
 

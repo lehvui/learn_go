@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,6 +22,25 @@ func TestDistance(t *testing.T) {
 	pos2 := Position{X: 3, Y: 5}
 
 	assert.Equal(t, 1.0, Distance(pos1, pos2))
+}
+
+func TestScaled(t *testing.T) {
+
+	start := Position{100, 50}
+	end := Position{307, 223}
+
+	long := 50
+	dir := Sub(end, start)
+	distance := Distance(start, end)
+
+	magX := dir.X / distance
+	magY := dir.Y / distance
+
+	newDir := Position{magX * float64(long), magY * float64(long)}
+
+	lastDir := Add(start, newDir)
+
+	fmt.Println(lastDir)
 }
 
 func TestPath(t *testing.T) {
